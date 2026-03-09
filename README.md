@@ -15,7 +15,7 @@ Quick entrypoints:
 - `model/notebooks/00_run_and_review_model.ipynb`
 
 ## Google Colab
-If you upload the folder to `/content/version_2`, both notebooks are already written to use:
+The current notebooks are using Google Collab to execuate the code, you can upload the folder to `/content/version_2`, both notebooks are already written to use:
 - `/content/version_2/process`
 - `/content/version_2/model`
 
