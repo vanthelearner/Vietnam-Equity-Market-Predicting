@@ -1,0 +1,16 @@
+# Raw inputs
+/data/raw_stock_data.csv
+/data/raw_macro_data.csv
+
+# Generated artifacts
+/process/outputs/
+/model/outputs/
+/model/data/*.csv
+
+# Python cache
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Stale duplicate package
+/model/src/eap_v2_model/

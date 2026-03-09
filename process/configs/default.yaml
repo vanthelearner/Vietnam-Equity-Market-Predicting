@@ -1,0 +1,26 @@
+paths:
+  input:
+    stock_raw_csv: ../data/raw_stock_data.csv
+    macro_raw_csv: ../data/raw_macro_data.csv
+  output:
+    root_dir: ./outputs
+
+cleaning:
+  start_date: '2000-01-01'
+  roll_days: 252
+  min_base_days: 60
+  min_rel: 0.70
+  min_stocks_early: 300
+  min_price: 1000.0
+  liq_win: 60
+  liq_minp: 20
+  target_clip: 0.50
+  outlier_abs_ret_flag: 1.0
+  stale_limit_days: 252
+
+macro:
+  max_missing_share: 0.995
+  release_lags:
+    US_GDP_QoQ: 30
+    US_CPI_YoY: 14
+    VN_CPI_YoY: 0
