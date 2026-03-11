@@ -27,6 +27,7 @@ def build_latest_recommendations(config: PipelineConfig, model_name: str, top_k:
     model_fn = _model_callable(model_name)
     model_kwargs = _model_kwargs(config, model_name)
 
+    # Reuse the last calibrated train/validation window and then score the latest transformed month.
     months = sorted(prepared.training_sample["eom"].unique())
     windows = build_rolling_windows(months, config.cv.train_months, config.cv.val_months, config.cv.test_months, config.cv.step_months)
     if not windows:
@@ -48,6 +49,7 @@ def build_latest_recommendations(config: PipelineConfig, model_name: str, top_k:
         **model_kwargs,
     )
 
+    # Merge a small set of raw fields back in so the ranked output is readable outside the model code.
     raw_latest = prepared.latest_raw.copy()
     raw_latest["eom"] = pd.to_datetime(raw_latest["eom"]).dt.to_period("M").dt.to_timestamp("M")
     raw_latest["id"] = raw_latest["id"].astype(str)
