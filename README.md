@@ -51,6 +51,8 @@ One important takeaway from the notebook is that out-of-sample `R2` is still sli
 | `OLS` / `careful_v3` | -0.0249 | 54.5% | 44.4% | 2.02 | -19.7% |
 | `ENET` / `careful_v3` | -0.0135 | 53.7% | 46.1% | 2.19 | -11.5% |
 
+Note: Vietnam does not currently allow standard equity short selling. The long-short results are included for research comparison only, to show cross-sectional separation between stronger and weaker ranked names.
+
 Additional interpretation from the saved notebook:
 
 - `careful_v3` is usually the safer default. The wider `max_v3` profile helps `ENET`, `PLS`, and `PCR`, but it degrades `OLS`, `NN`, and `RF`.
