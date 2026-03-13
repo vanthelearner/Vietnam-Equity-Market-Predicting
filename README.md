@@ -31,7 +31,7 @@ flowchart TD
 
 ## Results Snapshot
 
-The main review notebook is [`model/notebooks/00_run_and_review_model.ipynb`](model/notebooks/00_run_and_review_model.ipynb). The saved notebook outputs currently reflect runs completed on March 10-11, 2026.
+The main review notebook is [`model/notebooks/00_run_and_review_model.ipynb`](model/notebooks/00_run_and_review_model.ipynb). The saved notebook outputs currently reflect runs completed on March 10-11, 2026. For read-only review of the imported saved run folders, including reconstructed DM tables from saved prediction CSVs, use [`model/notebooks/02_review_saved_outputs.ipynb`](model/notebooks/02_review_saved_outputs.ipynb).
 
 - Latest fully labeled month scored in the notebook: `2026-02-28`
 - Raw monthly panel before final model filtering: `108,605` stock-month rows, `699` assets, `270` months
@@ -84,6 +84,7 @@ The design intentionally keeps `process` broad. The final liquidity screen is ap
 - [`model/run_model.py`](model/run_model.py): CLI entrypoint for the monthly modeling pipeline
 - [`model/notebooks/00_run_and_review_model.ipynb`](model/notebooks/00_run_and_review_model.ipynb): main model review notebook
 - [`model/notebooks/01_run_and_review_nn_architectures.ipynb`](model/notebooks/01_run_and_review_nn_architectures.ipynb): NN-focused review notebook
+- [`model/notebooks/02_review_saved_outputs.ipynb`](model/notebooks/02_review_saved_outputs.ipynb): read-only saved-output review notebook with run inventory, visual summaries, and reconstructed DM tables
 
 ## Quick Start
 
