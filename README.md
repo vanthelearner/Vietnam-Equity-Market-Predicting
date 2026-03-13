@@ -54,6 +54,7 @@ The design intentionally keeps `process` broad. The final liquidity screen is ap
 
 ## Project Layout
 
+- [`FEATURE_DICTIONARY.md`](FEATURE_DICTIONARY.md): feature reference for every model input used by the `version_2` pipeline
 - [`process/run_process.py`](process/run_process.py): CLI entrypoint for the daily pipeline
 - [`process/notebooks/00_run_and_review_process.ipynb`](process/notebooks/00_run_and_review_process.ipynb): process review notebook
 - [`model/run_model.py`](model/run_model.py): CLI entrypoint for the monthly modeling pipeline
