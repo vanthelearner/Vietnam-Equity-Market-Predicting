@@ -7,6 +7,28 @@ The workflow is split into two stages:
 - `process`: build a broad daily stock and macro panel
 - `model`: convert that panel into a monthly cross-section, apply the final investability filter, run rolling models, and review portfolio outputs
 
+## High-Level Diagram
+
+```mermaid
+flowchart TD
+    A[data/raw_stock_data.csv] --> B[process: transform]
+    C[data/raw_macro_data.csv] --> D[process: process_macro]
+    B --> E[process: validate]
+    B --> F[process: process_stock]
+    D --> G[process: build_model]
+    F --> G
+    G --> H[process/outputs/03_model_data/daily_model_data.csv]
+    I[data/risk-free.csv] --> J[model: prepare]
+    H --> J
+    J --> K[Monthly panel and benchmark inputs]
+    K --> L[model: train]
+    L --> M[Per-model predictions, windows, portfolios, benchmark comparisons]
+    M --> N[model: compare]
+    N --> O[Cross-model comparison tables]
+    M --> P[Model review notebooks]
+    O --> P
+```
+
 ## Results Snapshot
 
 The main review notebook is [`model/notebooks/00_run_and_review_model.ipynb`](model/notebooks/00_run_and_review_model.ipynb). The saved notebook outputs currently reflect runs completed on March 10-11, 2026.
