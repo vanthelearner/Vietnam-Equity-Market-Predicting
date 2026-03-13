@@ -16,7 +16,7 @@ preprocess:
   min_price: 1000.0
   min_me: 100000.0
   liquidity_category: broad_liquid_top50
-  feature_profile: careful_v3
+  feature_profile: max_v3
   min_col_coverage: 0.75
   winsor_lower: 0.01
   winsor_upper: 0.99

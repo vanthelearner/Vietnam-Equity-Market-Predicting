@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 
 from .config import LIQUIDITY_KEEP_SHARE, PipelineConfig
 from .pipeline import _feature_set_for_model, _model_callable, _model_kwargs
+from .feature_profiles import REQUIRED_PANEL_COLS
 from .preprocess import (
-    REQUIRED_KEEP_COLUMNS,
     RESERVED_EXCLUDE_FEATURES,
     _load_inputs,
     _rank_scale_minus1_to_1,
@@ -63,12 +64,13 @@ def _prepare_true_latest_scoring_panel(config: PipelineConfig) -> tuple[pd.DataF
     coverage = labeled.notna().mean()
     keep_cols = [
         c for c in panel.columns
-        if (coverage.get(c, 0.0) >= config.preprocess.min_col_coverage) or (c in REQUIRED_KEEP_COLUMNS)
+        if (coverage.get(c, 0.0) >= config.preprocess.min_col_coverage) or (c in REQUIRED_PANEL_COLS)
     ]
     panel = panel[keep_cols].copy()
 
-    required_no_lead = [c for c in REQUIRED_KEEP_COLUMNS if c != "ret_exc_lead1m" and c in panel.columns]
+    required_no_lead = [c for c in REQUIRED_PANEL_COLS if c != "ret_exc_lead1m" and c in panel.columns]
     num_cols = [c for c in panel.columns if pd.api.types.is_numeric_dtype(panel[c]) and not pd.api.types.is_bool_dtype(panel[c])]
+    panel[num_cols] = panel[num_cols].replace([float('inf'), float('-inf')], np.nan)
     panel[num_cols] = panel.groupby("eom", sort=False)[num_cols].transform(lambda g: g.fillna(g.median()))
     panel = panel.dropna(subset=required_no_lead).copy()
 
@@ -117,9 +119,20 @@ def build_true_latest_recommendations(config: PipelineConfig, model_name: str, t
     train_months, val_months = _build_latest_calibration_months(labeled_months, config.cv.train_months, config.cv.val_months)
     latest_labeled_eom = pd.Timestamp(labeled_months[-1])
 
-    tr = training_sample.loc[training_sample["eom"].isin(train_months)].dropna(subset=feature_cols + ["ret_exc_lead1m"]).copy()
-    va = training_sample.loc[training_sample["eom"].isin(val_months)].dropna(subset=feature_cols + ["ret_exc_lead1m"]).copy()
-    latest = latest_sample.dropna(subset=feature_cols).copy()
+    tr = training_sample.loc[training_sample["eom"].isin(train_months)].copy()
+    va = training_sample.loc[training_sample["eom"].isin(val_months)].copy()
+    latest = latest_sample.copy()
+
+    for frame in (tr, va, latest):
+        frame[feature_cols] = frame[feature_cols].replace([float('inf'), float('-inf')], np.nan)
+
+    tr = tr.dropna(subset=feature_cols + ["ret_exc_lead1m"]).copy()
+    va = va.dropna(subset=feature_cols + ["ret_exc_lead1m"]).copy()
+    latest = latest.dropna(subset=feature_cols).copy()
+
+    bad_cols = [c for c in feature_cols if (not pd.api.types.is_numeric_dtype(tr[c])) or (not pd.Series(tr[c]).replace([float('inf'), float('-inf')], np.nan).dropna().empty and not np.isfinite(pd.to_numeric(tr[c], errors='coerce').dropna()).all())]
+    if bad_cols:
+        raise RuntimeError(f"Selected feature columns still contain non-finite values after cleanup: {bad_cols}")
     if len(latest) == 0:
         raise RuntimeError("No true-latest rows remain after feature availability checks.")
 

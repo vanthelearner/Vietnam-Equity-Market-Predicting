@@ -11,6 +11,7 @@ MACRO_KEEP = [
     'Global_Baltic_Dry', 'USD_CNY_FX', 'USD_VND_FX', 'US_Bond_10Y', 'US_CPI_YoY', 'US_Dollar_Index',
     'US_FedFunds_Rate', 'US_GDP_QoQ', 'US_Market_SP500', 'US_RiskFree_3M', 'US_Volatility_VIX',
     'VN_CPI_YoY', 'VN_Market_Index', 'VN_MoneySupply_M2',
+    'Hong_Kong_Index', 'Indonesia_Index', 'Philippines_Index', 'Thailand_Index', 'China_Shanghai_Index', 'VN_DIAMOND_INDEX',
 ]
 
 
@@ -21,6 +22,8 @@ def _next_business_day(ts: pd.Timestamp) -> pd.Timestamp:
 
 
 def _shift_events_to_release_dates(series: pd.Series, lag_days: int) -> pd.Series:
+    # Treat a value change as an information event and move it to the first date
+    # when that update would reasonably be available to the model.
     change_mask = series.ne(series.shift()) & series.notna()
     events = series[change_mask]
     release_dates = events.index + pd.to_timedelta(lag_days, unit='D')
@@ -30,6 +33,8 @@ def _shift_events_to_release_dates(series: pd.Series, lag_days: int) -> pd.Serie
 
 
 def _apply_release_lags_once(macro_df: pd.DataFrame, lag_rules: dict[str, int]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    # Build one lagged macro panel up front so every stock row sees the same
+    # release-timing logic during the final merge.
     full_index = pd.DatetimeIndex(macro_df.index)
     shifted_events = {}
     diag_rows = []
@@ -59,9 +64,15 @@ def run(config: PipelineConfig, paths: OutputPaths, context: dict) -> dict:
 
     stocks_merge = stocks.sort_values('Date').copy()
     macro_merge = macro_lagged.reset_index().rename(columns={'index': 'Date'}).sort_values('Date')
+    # Use an as-of merge so each stock row only sees macro information that has
+    # already been released by that date.
     model_data = pd.merge_asof(stocks_merge, macro_merge, on='Date', direction='backward')
     model_data = model_data[model_data['Date'] >= macro_lagged.index.min()].copy()
     model_data = model_data.sort_values(['Ticker', 'Date']).reset_index(drop=True)
     model_data.to_csv(paths.model_data, index=False)
     context['model_data_csv'] = str(paths.model_data)
-    return {'outputs': {'macro_lagged': str(paths.macro_lagged), 'macro_lag_diag': str(paths.macro_lag_diag), 'model_data': str(paths.model_data)}, 'metrics': {'model_rows': int(len(model_data)), 'model_tickers': int(model_data['Ticker'].nunique())}, 'warnings': []}
+    return {
+        'outputs': {'macro_lagged': str(paths.macro_lagged), 'macro_lag_diag': str(paths.macro_lag_diag), 'model_data': str(paths.model_data)},
+        'metrics': {'model_rows': int(len(model_data)), 'model_tickers': int(model_data['Ticker'].nunique())},
+        'warnings': [],
+    }

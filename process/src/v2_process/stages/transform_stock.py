@@ -7,7 +7,11 @@ from ..contracts import PipelineConfig
 from ..paths import OutputPaths
 
 KEEP_COLS = [
-    'Date', 'Ticker', 'Price', 'Market_Cap', 'Volume', 'Shares_Out', 'Bid_Ask', 'Free_Float_Pct', 'FCF',
+    'Date', 'Ticker',
+    'Price', 'Open', 'High', 'Low', 'TRI_Gross', 'Market_Cap', 'Volume', 'Shares_Out', 'Bid_Ask', 'Free_Float_Pct', 'Vol_30D', 'Vol_90D',
+    'Assets', 'Equity', 'Cash', 'Debt', 'D/E_Ratio', 'COGS', 'Capex', 'Cur_Assets', 'Cur_Liab', 'EBITDA', 'EV', 'Gross_Profit',
+    'Inventory_BS', 'Inventory_Flow', 'Net_Income', 'Net_Margin', 'Oper_CF', 'Oper_Inc', 'Oper_Margin', 'PPE', 'R&D',
+    'ROA_Reported', 'ROE_Reported', 'Receivables', 'Sales', 'FCF', 'Div_Yield',
     'bm', 'ep', 'cfp', 'dy', 'lev', 'cash_ratio', 'roeq', 'gma', 'agr', 'chcsho', 'chinv', 'pchsale_pchinvt',
     'age', 'turn', 'std_turn', 'maxret', 'idiovol', 'mom1m', 'mom6m', 'mom12m', 'mom36m'
 ]
@@ -57,7 +61,6 @@ def run(config: PipelineConfig, paths: OutputPaths, context: dict) -> dict:
     mcap = df.get('Market_Cap', np.nan)
     shares_out = df.get('Shares_Out', np.nan)
     volume = df.get('Volume', np.nan)
-    price = df.get('Price', np.nan)
     inv_bs = df.get('Inventory_BS', np.nan)
 
     df['bm'] = _safe_div(equity, mcap)
@@ -89,4 +92,8 @@ def run(config: PipelineConfig, paths: OutputPaths, context: dict) -> dict:
     out = df[[c for c in KEEP_COLS if c in df.columns]].copy()
     out = out.replace([np.inf, -np.inf], np.nan)
     out.to_csv(paths.transformed_stock, index=False)
-    return {'outputs': {'stock_transformed_csv': str(paths.transformed_stock)}, 'metrics': {'n_rows': int(len(out)), 'n_tickers': int(out['Ticker'].nunique()), 'n_columns': int(out.shape[1])}, 'warnings': []}
+    return {
+        'outputs': {'stock_transformed_csv': str(paths.transformed_stock)},
+        'metrics': {'n_rows': int(len(out)), 'n_tickers': int(out['Ticker'].nunique()), 'n_columns': int(out.shape[1])},
+        'warnings': [],
+    }

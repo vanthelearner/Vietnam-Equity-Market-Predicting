@@ -97,6 +97,7 @@ def _feature_set_for_model(config: PipelineConfig, model_name: str, feature_cols
     key = model_name.upper()
     if key != "OLS3":
         return list(feature_cols)
+    # OLS3 intentionally stays on a fixed, interpretable three-feature specification.
     fixed = list(config.models.ols3.get("fixed_features", ["me", "be_me", "ret_12_1"]))
     missing = [c for c in fixed if c not in feature_cols]
     if missing:
@@ -123,6 +124,7 @@ def _run_sample(df_sample: pd.DataFrame, sample_name: str, feature_cols: list[st
     pred_chunks = []
     win_rows = []
     for w in windows:
+        # Each window is fit independently so the final prediction table is fully out of sample.
         tr = df_sample[df_sample["eom"].isin(w.train_months)].dropna(subset=feature_cols + [target_col]).copy()
         va = df_sample[df_sample["eom"].isin(w.val_months)].dropna(subset=feature_cols + [target_col]).copy()
         te = df_sample[df_sample["eom"].isin(w.test_months)].dropna(subset=feature_cols + [target_col]).copy()
@@ -171,6 +173,7 @@ def _run_sample(df_sample: pd.DataFrame, sample_name: str, feature_cols: list[st
 def _feature_importance_last_window(df_full: pd.DataFrame, feature_cols: list[str], target_col: str, windows: list[RollingWindow], model_fn: Callable[..., WindowFitResult], model_kwargs: dict, run_flag: bool) -> pd.DataFrame:
     if not run_flag or not windows:
         return pd.DataFrame()
+    # Variable importance is reported on the final calibration window only to keep runtime predictable.
     w = windows[-1]
     tr = df_full[df_full["eom"].isin(w.train_months)].dropna(subset=feature_cols + [target_col]).copy()
     va = df_full[df_full["eom"].isin(w.val_months)].dropna(subset=feature_cols + [target_col]).copy()
@@ -199,6 +202,7 @@ def _run_single_model(prepared: PreparedData, config: PipelineConfig, model_name
     kwargs = _model_kwargs(config, model_name)
     feat_cols = _feature_set_for_model(config, model_name, prepared.feature_cols)
     target_col = "ret_exc_lead1m"
+    # Run the same model over the full universe and the size-based subsamples so outputs stay comparable.
     pred_full, win_full, r2_full = _run_sample(prepared.full, "Full sample", feat_cols, target_col, windows, model_fn, kwargs)
     pred_large, win_large, r2_large = _run_sample(prepared.large, "Large firms", feat_cols, target_col, windows, model_fn, kwargs)
     pred_small, win_small, r2_small = _run_sample(prepared.small, "Small firms", feat_cols, target_col, windows, model_fn, kwargs)
@@ -254,6 +258,7 @@ def run_pipeline(config: PipelineConfig, selected_models: list[str], selected_st
 
     prepared_outputs = None
     if stages.intersection({"prepare", "train", "compare"}):
+        # The prepared monthly artifacts are the shared starting point for every later stage.
         prepared_outputs = build_monthly_inputs(config)
 
     if stages == {"prepare"}:
@@ -281,12 +286,14 @@ def run_pipeline(config: PipelineConfig, selected_models: list[str], selected_st
 
     artifacts: dict[str, SingleModelArtifacts] = {}
     if stages.intersection({"train", "compare"}):
+        # Save each model independently so partial reruns can target one model without rebuilding every artifact.
         for model_name in models:
             art = _run_single_model(prepared, config, model_name, windows)
             artifacts[model_name] = art
             _save_model_artifacts(run_dir, art)
 
     if "compare" in stages and artifacts:
+        # Cross-model outputs are built only after all requested single-model runs are complete.
         r2_all = None
         for m, art in artifacts.items():
             tmp = art.r2_summary[["sample", f"R2OOS_{m}"]].copy()
@@ -314,6 +321,8 @@ def run_pipeline(config: PipelineConfig, selected_models: list[str], selected_st
         "run_dir": str(run_dir),
         "n_windows": len(windows),
         "n_features": len(prepared.feature_cols),
+        "feature_profile": config.preprocess.feature_profile,
+        "liquidity_category": config.preprocess.liquidity_category,
         "n_assets_full": int(prepared.full['id'].nunique()),
         "date_min": str(prepared.full['eom'].min().date()),
         "date_max": str(prepared.full['eom'].max().date()),
