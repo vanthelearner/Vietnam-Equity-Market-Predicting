@@ -85,14 +85,30 @@ The design intentionally keeps `process` broad. The final liquidity screen is ap
 - [`model/notebooks/00_run_and_review_model.ipynb`](model/notebooks/00_run_and_review_model.ipynb): main model review notebook
 - [`model/notebooks/01_run_and_review_nn_architectures.ipynb`](model/notebooks/01_run_and_review_nn_architectures.ipynb): NN-focused review notebook
 - [`model/notebooks/02_review_saved_outputs.ipynb`](model/notebooks/02_review_saved_outputs.ipynb): read-only saved-output review notebook with run inventory, visual summaries, and reconstructed DM tables
+- [`model/notebooks/get data.ipynb`](model/notebooks/get%20data.ipynb): Bloomberg pull notebook for building `raw_stock_data.csv` and `raw_macro_data.csv`
 
 ## Quick Start
 
-Before running the pipeline, place the required local input files into [`data/`](data/):
+To build the Bloomberg-derived stock and macro inputs, use [`model/notebooks/get data.ipynb`](model/notebooks/get%20data.ipynb):
+
+1. Open the notebook in an environment with Bloomberg access and the required Python packages (`xbbg` and `blpapi`).
+2. Change the notebook `ROOT` path to your local [`data/`](data/) directory, or another working folder where you want the raw files written.
+3. Run the macro pull cells to write `raw_macro_data.csv`.
+4. Run the stock-universe and stock-pull cells to write `raw_stock_data.csv`.
+5. Copy or move those two CSVs into [`data/`](data/) if you wrote them somewhere else.
+
+The notebook is designed to save:
+
+- `raw_stock_data.csv`
+- `raw_macro_data.csv`
+
+Before running the pipeline, make sure the required local input files exist in [`data/`](data/):
 
 - `raw_stock_data.csv`
 - `raw_macro_data.csv`
 - `risk-free.csv`
+
+`risk-free.csv` is still a separate local input and is not created by the Bloomberg pull notebook.
 
 Run the daily `process` stage first:
 
@@ -136,6 +152,8 @@ The notebooks install their local requirements, run the pipeline code, and displ
 The raw market datasets used by this project are Bloomberg-derived working files.
 
 - `data/raw_stock_data.csv` and `data/raw_macro_data.csv` are expected to come from Bloomberg exports or equivalent Bloomberg-sourced workflows.
+- The supported repo workflow for producing those files is [`model/notebooks/get data.ipynb`](model/notebooks/get%20data.ipynb), which pulls the stock and macro panels through Bloomberg's Python interface.
+- Running that notebook requires your own Bloomberg-enabled environment, including access to Bloomberg data plus the `xbbg` and `blpapi` Python packages.
 - Those Bloomberg-derived inputs are not open data. Reproducing this project requires your own valid Bloomberg license and compliance with Bloomberg's data terms.
 - Bloomberg-sourced files should not be redistributed through this repository, mirrored into a public release, or shared outside the rights granted by Bloomberg.
 - Generated outputs that materially contain Bloomberg-derived content may also remain subject to Bloomberg's terms, even when transformed by this pipeline.
