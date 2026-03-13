@@ -77,6 +77,7 @@ The design intentionally keeps `process` broad. The final liquidity screen is ap
 ## Project Layout
 
 - [`docs/architecture.md`](docs/architecture.md): end-to-end pipeline architecture, data flow, and stage contracts
+- [`docs/manuals/README.md`](docs/manuals/README.md): GitHub-friendly mirror of the full `version_2` manual pack
 - [`FEATURE_DICTIONARY.md`](FEATURE_DICTIONARY.md): feature reference for every model input used by the `version_2` pipeline
 - [`process/run_process.py`](process/run_process.py): CLI entrypoint for the daily pipeline
 - [`process/notebooks/00_run_and_review_process.ipynb`](process/notebooks/00_run_and_review_process.ipynb): process review notebook
